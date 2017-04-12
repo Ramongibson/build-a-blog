@@ -36,7 +36,8 @@ class PostHandler(webapp2.RequestHandler):
         if post and title:
             a = Post(title = title, post = post)
             a.put()
-            self.redirect("/blog")
+            blog_post = a.key().id()
+            self.redirect("/blog/%s" % blog_post)
         else:
             error = "Title and body required!"
             t = jinja_env.get_template("newpost.html")
@@ -44,12 +45,18 @@ class PostHandler(webapp2.RequestHandler):
             self.response.write(content)
             
 class ViewPostHandler(webapp2.RequestHandler):
+    def renderError(self, error_code):
+        self.error(error_code)
+        self.response.write("Oops! Something went wrong.")
+        
     def get(self, id):
         posts = Post.get_by_id(int(id))
-        t = jinja_env.get_template("blog.html")
-        content = t.render(posts = [posts])
-        self.response.write(content)
-        
+        if posts:
+            t = jinja_env.get_template("blog.html")
+            content = t.render(posts = [posts])
+            self.response.write(content)
+        else:
+            self.renderError(400)
         
         
 
